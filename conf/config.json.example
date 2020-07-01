@@ -1,0 +1,8 @@
+{
+  "intervalInSecond": 60,
+  "targetFilePath": "target/gen-target.json",
+  "nacosHost": "http://test1:8684/nacos",
+  "namespaceId": "prod",
+  "group": "DEFAULT_GROUP",
+  "cluster": "DEFAULT"
+}

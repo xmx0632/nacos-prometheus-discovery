@@ -1,0 +1,4 @@
+/target/
+nacos-prometheus-discovery
+.idea
+conf/config.json
