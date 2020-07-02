@@ -12,13 +12,32 @@ import (
 	"strings"
 )
 
+func FetchPrometheusConfig(config model.Config) {
+	targetFilePath := config.TargetFilePath
+	nacosHost := config.NacosHost
+	namespaceId := config.NamespaceId
+	group := config.Group
+	//cluster := config.Cluster
+	tenant := config.NamespaceId
+	dataId := config.DataId
+
+	log.Println("dataId:", dataId)
+
+	configString := GetConfig(nacosHost, tenant, namespaceId, dataId, group)
+	log.Println("configString:", configString)
+
+	wfErr := ioutil.WriteFile(targetFilePath, []byte(configString), os.ModePerm)
+	if wfErr != nil {
+		log.Println("generate target file failed", wfErr)
+	}
+}
+
 func GeneratePrometheusTarget(config model.Config) {
 	targetFilePath := config.TargetFilePath
 	nacosHost := config.NacosHost
 	namespaceId := config.NamespaceId
 	group := config.Group
 	cluster := config.Cluster
-
 	serviceNames := GetServiceNames(nacosHost, namespaceId, group)
 
 	// generate target json
@@ -27,22 +46,11 @@ func GeneratePrometheusTarget(config model.Config) {
 	for i, serviceName := range serviceNames {
 		log.Println()
 		log.Println("service["+strconv.Itoa(i)+"] : ", serviceName)
-
-		instancesUrl := fmt.Sprintf("%s/v1/ns/instance/list?serviceName=%s&namespaceId=%s&cluster=%s", nacosHost, serviceName, namespaceId, cluster)
-		//log.Println("=== instancesUrl:", instancesUrl)
-
-		instanceJson, ierr := httputil.Get(instancesUrl)
-		if ierr != nil {
-			log.Println("get instanceJson failed", ierr)
-		}
-		instance := model.Instance{}
-		json.Unmarshal([]byte(instanceJson), &instance)
-
+		instance := GetInstance(nacosHost, serviceName, namespaceId, cluster)
 		targets := []string{}
 		lables := make(map[string]string)
 
 		hosts := instance.Hosts
-
 		for j, host := range hosts {
 			hostAddress := host.Ip + ":" + strconv.Itoa(host.Port)
 			log.Println("host["+strconv.Itoa(j)+"] :", hostAddress)
@@ -74,6 +82,19 @@ func GeneratePrometheusTarget(config model.Config) {
 	}
 }
 
+func GetInstance(nacosHost string, serviceName string, namespaceId string, cluster string) model.Instance {
+	instancesUrl := fmt.Sprintf("%s/v1/ns/instance/list?serviceName=%s&namespaceId=%s&cluster=%s", nacosHost, serviceName, namespaceId, cluster)
+	//log.Println("=== instancesUrl:", instancesUrl)
+
+	instanceJson, ierr := httputil.Get(instancesUrl)
+	if ierr != nil {
+		log.Println("get instanceJson failed", ierr)
+	}
+	instance := model.Instance{}
+	json.Unmarshal([]byte(instanceJson), &instance)
+	return instance
+}
+
 func ReplaceInvalidChar(key string) string {
 	validKey := key
 	validKey = strings.ReplaceAll(validKey, ".", "_")
@@ -93,4 +114,15 @@ func GetServiceNames(nacosHost string, namespaceId string, group string) []strin
 	service := model.Service{}
 	json.Unmarshal([]byte(services), &service)
 	return service.Doms
+}
+
+func GetConfig(nacosHost, tenant, namespaceId, dataId, group string) string {
+	configUrl := fmt.Sprintf("%s/v1/cs/configs?tenant=%s&namespaceId=%s&dataId=%s&group=%s", nacosHost, tenant, namespaceId, dataId, group)
+	log.Println("=== configUrl:", configUrl)
+
+	config, serr := httputil.Get(configUrl)
+	if serr != nil {
+		log.Println("get config failed", serr)
+	}
+	return config
 }

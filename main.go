@@ -12,7 +12,12 @@ import (
 	"time"
 )
 
-const DefaultConfigPath = "conf/config.json"
+const (
+	DefaultConfigPath = "conf/config.json"
+
+	MODE_CONFIG  = "config"
+	MODE_SERVICE = "service"
+)
 
 func init() {
 	log.SetFlags(log.Ldate | log.Lmicroseconds | log.Lshortfile)
@@ -55,8 +60,14 @@ func main() {
 			fmt.Println("Exit!")
 			return
 		case t := <-ticker.C:
-			fmt.Println("Current time: ", t)
-			service.GeneratePrometheusTarget(config)
+			mode := config.Mode
+			log.Printf("Current time:%s mode: %s", t, mode)
+			if mode == MODE_CONFIG {
+				service.FetchPrometheusConfig(config)
+			}
+			if mode == MODE_SERVICE {
+				service.GeneratePrometheusTarget(config)
+			}
 		}
 	}
 }
