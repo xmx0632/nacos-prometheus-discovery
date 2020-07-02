@@ -4,12 +4,17 @@ echo "exec ${BASH_SOURCE[0]}"
 export BASE_DIR=`cd $(dirname $0); pwd`
 echo $BASE_DIR
 
-rm -rf build
-mkdir -p build/bin
-cd build/bin
+TARGET_DIR=target
+
+rm -rf $TARGET_DIR
+mkdir -p $TARGET_DIR/bin
+
+cp -rf conf $TARGET_DIR/bin
+cd $TARGET_DIR/bin
 
 go get github.com/karalabe/xgo
 xgo --targets=darwin/amd64,linux/amd64,windows/amd64,windows/386  gitee.com/xmx0632/nacos-prometheus-discovery
+
 
 # build all platform
 # xgo gitee.com/xmx0632/nacos-prometheus-discovery

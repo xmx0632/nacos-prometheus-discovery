@@ -28,7 +28,25 @@
 
 
 #### 3. 编译服务
+```
 go build -o nacos-prometheus-discovery main.go
+```
+交叉编译多平台可执行文件,文件生成在 target/bin 目录下：
+```
+sh build.sh
+```
+生成文件列表：
+```
+> ll target/bin/
+> conf
+> nacos-prometheus-discovery-darwin-10.6-amd64
+> nacos-prometheus-discovery-linux-amd64
+> nacos-prometheus-discovery-windows-4.0-386.exe
+> nacos-prometheus-discovery-windows-4.0-amd64.exe
+
+
+```
+
 
 #### 4. 启动服务
 
